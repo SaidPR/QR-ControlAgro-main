@@ -43,24 +43,33 @@ const RegistroUsuario = ({ navigation }) => {
   };
 
   const handleRegistro = async () => {
-    const { email, password } = formData;
-
+    const { email, password, primerNombre, segundoNombre, primerApellido, segundoApellido, telefono } = formData;
+  
     // Validar el formato del correo
     if (!isValidEmail(email)) {
       setError("Por favor ingrese un correo electrónico válido.");
       return;
     }
-
+  
     try {
       // Crea un nuevo usuario en Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
       const user = userCredential.user;
       console.log("Usuario registrado:", user.email);
-
+  
+      // Construye los datos organizados
+      const userData = {
+        name: `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`.trim(),
+        phone: telefono,
+        email,
+        fechaNacimiento: formData.fechaNacimiento,
+        curp: formData.curp,
+      };
+  
       // Guarda el usuario en Firestore
       const usersCollectionRef = collection(FIRESTORE_DB, "users");
-      await addDoc(usersCollectionRef, formData);
-
+      await addDoc(usersCollectionRef, userData);
+  
       console.log("Usuario guardado en Firestore");
       navigation.navigate("Reg_Docs");
     } catch (error) {
@@ -68,6 +77,7 @@ const RegistroUsuario = ({ navigation }) => {
       setError(error.message);
     }
   };
+  
 
   return (
     <KeyboardAvoidingView

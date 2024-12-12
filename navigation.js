@@ -14,6 +14,8 @@ import DetailsReports from "./screens/DetailsReports"; // Detalles de reportes
 import { FIREBASE_AUTH } from "./firebaseConfig.js"; // Importa FIREBASE_AUTH
 import { onAuthStateChanged } from "firebase/auth";
 import Reg_Docs from "./screens/Reg_Docs"; // Importa la pantalla RegDocs
+import UsersList from "./screens/UsersList"; // Gestión de Usuarios
+import UsersDetails from "./screens/UsersDetails"; // Detalles del usuario
 
 const Stack = createStackNavigator();
 
@@ -54,6 +56,18 @@ const StackNavigator = () => {
                 name="RecoverPassword"
                 component={RecoverPasswordScreen}
                 options={{ title: "Recuperar Contraseña" }}
+            />
+            <Stack.Screen
+                name="UsersList"
+                component={UsersList}
+                options={{ title: "Administrar Usuarios" }}
+            />
+            <Stack.Screen
+                name="UsersDetails"
+                component={UsersDetails}
+                options={({ route }) => ({
+                    title: `Detalles de ${route.params?.worker?.name || "Usuarios"}`,
+                })}
             />
             <Stack.Screen
                 name="WorkersList"

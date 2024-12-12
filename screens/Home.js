@@ -19,7 +19,12 @@ const Home = ({ navigation }) => {
       >
         <Text style={styles.menuButtonText}>Pase de lista (QR)</Text>
       </TouchableOpacity>
-
+      <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => navigation.navigate("UsersList")}
+      >
+        <Text style={styles.menuText}>Administrar Usuarios</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         style={styles.menuButton}
         onPress={() => navigation.navigate("WorkersList")}
