@@ -1,23 +1,41 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import { collection, getDocs, addDoc } from "firebase/firestore";
+import { FIRESTORE_DB } from "../firebaseConfig";
 
 const ProductionControl = ({ navigation }) => {
-  const [production, setProduction] = useState([
-    { id: "1", name: "Morgan James", date: "18 Nov 2024", boxes: 12, buckets: 10 },
-    { id: "2", name: "John Doe", date: "17 Nov 2024", boxes: 15, buckets: 13 },
-    { id: "3", name: "J Mole", date: "16 Nov 2024", boxes: 10, buckets: 9 },
-  ]);
+  const [production, setProduction] = useState([]);
 
-  const handleAddRecord = () => {
-    Alert.alert("Función no implementada", "Próximamente podrás agregar registros.");
+  // Recuperar registros de producción desde Firestore
+  const fetchProduction = async () => {
+    try {
+      const snapshot = await getDocs(collection(FIRESTORE_DB, "productions"));
+      const productionList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setProduction(productionList);
+    } catch (error) {
+      console.error("Error al obtener los registros de producción:", error);
+    }
   };
+
+  // Guardar nuevo registro en Firestore
+  const handleAddRecord = async (record) => {
+    try {
+      const docRef = await addDoc(collection(FIRESTORE_DB, "productions"), record);
+      setProduction((prev) => [
+        ...prev,
+        { id: docRef.id, ...record },
+      ]);
+    } catch (error) {
+      console.error("Error al guardar el registro:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProduction();
+  }, []); // Se ejecuta una vez al cargar el componente
 
   const renderProduction = ({ item }) => (
     <TouchableOpacity
@@ -40,7 +58,12 @@ const ProductionControl = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         renderItem={renderProduction}
         ListHeaderComponent={
-          <TouchableOpacity style={styles.addButton} onPress={handleAddRecord}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate("AddProductionRecord", { 
+              onSave: handleAddRecord 
+            })}
+          >
             <Text style={styles.addButtonText}>+ Añadir Registro</Text>
           </TouchableOpacity>
         }

@@ -1,63 +1,56 @@
-/* import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
-import { Camera } from "expo-camera";
+/*import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { Camera } from 'expo-camera';
+import * as BarcodeScanner from 'expo-barcode-scanner';
 
-const ScanQRCode = ({ navigation }) => {
+const ScanQRCode = () => {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
+  const [qrData, setQrData] = useState(null);
 
   useEffect(() => {
-    // Solicitar permisos de la cámara
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
+    const requestPermission = async () => {
+      const { status } = await BarcodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a la cámara para escanear el código QR');
+      }
+    };
+    requestPermission();
   }, []);
 
-  const handleBarCodeScanned = ({ type, data }) => {
-    setScanned(true); // Detener el escaneo después del primer éxito
-    Alert.alert("Código Escaneado", `Datos: ${data}`, [
-      { text: "OK", onPress: () => navigation.goBack() }, // Navega hacia atrás después del escaneo
-    ]);
+  const onScan = ({ type, data }) => {
+    setScanned(true);
+    setQrData(data);
+  };
+
+  const resetScanner = () => {
+    setScanned(false);
+    setQrData(null);
   };
 
   if (hasPermission === null) {
-    return (
-      <View style={styles.container}>
-        <Text>Solicitando permisos para la cámara...</Text>
-      </View>
-    );
+    return <Text>Solicitando permisos...</Text>;
   }
 
   if (hasPermission === false) {
-    return (
-      <View style={styles.container}>
-        <Text>No se otorgaron permisos para usar la cámara.</Text>
-      </View>
-    );
+    return <Text>No se ha concedido permiso para usar la cámara.</Text>;
   }
 
   return (
     <View style={styles.container}>
-      <Camera
-        style={StyleSheet.absoluteFillObject}
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        barCodeScannerSettings={{
-          barCodeTypes: [Camera.Constants.BarCodeType.qr], // Solo escanear QR
-        }}
-      >
-        <View style={styles.overlay}>
-          <Text style={styles.overlayText}>Apunta al código QR para escanear</Text>
-          {scanned && (
-            <TouchableOpacity
-              style={styles.scanAgainButton}
-              onPress={() => setScanned(false)}
-            >
-              <Text style={styles.scanAgainText}>Escanear de nuevo</Text>
-            </TouchableOpacity>
-          )}
+      {!scanned ? (
+        <Camera style={styles.camera} onBarCodeScanned={scanned ? undefined : onScan}>
+          <View style={styles.overlay}>
+            <Text style={styles.centerText}>Escanea un código QR</Text>
+          </View>
+        </Camera>
+      ) : (
+        <View style={styles.resultContainer}>
+          <Text style={styles.resultText}>Datos escaneados: {qrData}</Text>
+          <Text style={styles.resetText} onPress={resetScanner}>Escanear de nuevo</Text>
         </View>
-      </Camera>
+      )}
     </View>
   );
 };
@@ -65,34 +58,43 @@ const ScanQRCode = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  camera: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   overlay: {
-    position: "absolute",
-    bottom: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 10,
+    position: 'absolute',
+    top: '40%',
+    width: '100%',
+    alignItems: 'center',
+  },
+  centerText: {
+    fontSize: 18,
+    color: '#fff',
     padding: 10,
-    alignItems: "center",
   },
-  overlayText: {
-    color: "#fff",
+  resultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultText: {
+    fontSize: 20,
+    padding: 20,
+    color: '#000',
+  },
+  resetText: {
     fontSize: 16,
-    marginBottom: 10,
-  },
-  scanAgainButton: {
-    backgroundColor: "#34d058",
-    padding: 10,
-    borderRadius: 5,
-  },
-  scanAgainText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: 'blue',
+    textDecorationLine: 'underline',
   },
 });
 
 export default ScanQRCode;
- */
+*/

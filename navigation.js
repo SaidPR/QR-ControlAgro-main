@@ -16,6 +16,10 @@ import { onAuthStateChanged } from "firebase/auth";
 import Reg_Docs from "./screens/Reg_Docs"; // Importa la pantalla RegDocs
 import UsersList from "./screens/UsersList"; // Gestión de Usuarios
 import UsersDetails from "./screens/UsersDetails"; // Detalles del usuario
+import GenerateQR from "./screens/GenerateQR.js";
+import EditUser from "./screens/EditUser.js"
+import AddProductionRecord from "./screens/AddProductionRecord.js"
+//import ScanQRCode from "./screens/ScanQRCode.js";
 
 const Stack = createStackNavigator();
 
@@ -108,6 +112,21 @@ const StackNavigator = () => {
                 name="Reg_Docs"
                 component={Reg_Docs}
                 options={{ title: "Subida de Documentos" }}
+            />
+            <Stack.Screen
+                name="GenerateQR"
+                component={GenerateQR}
+                options={{ title: "Generar Código QR" }}
+            />
+            <Stack.Screen
+                name="EditUser"
+                component={EditUser}
+                options={{ title: "Editar datos de usuario" }}
+            />
+            <Stack.Screen
+                name="AddProductionRecord"
+                component={AddProductionRecord}
+                options={{ title: "Agregar registros" }}
             />
         </Stack.Navigator>
     );
