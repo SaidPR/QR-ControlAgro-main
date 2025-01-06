@@ -94,9 +94,7 @@ const WorkerDetails = ({ route, navigation }) => {
       <Text style={styles.title}>{worker.name}</Text>
       <Text style={styles.detail}>📞 {worker.phone}</Text>
       <Text style={styles.detail}>📍 {worker.location}</Text>
-      <Text style={styles.description}>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Información
-        adicional sobre el trabajador.
+      <Text style={styles.description}>{worker.description}
       </Text>
     </View>
   );

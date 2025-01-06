@@ -33,9 +33,11 @@ const ProductionControl = ({ navigation }) => {
     }
   };
 
+  // Recargar los registros después de cambios
   useEffect(() => {
-    fetchProduction();
-  }, []); // Se ejecuta una vez al cargar el componente
+    const unsubscribe = navigation.addListener("focus", fetchProduction);
+    return unsubscribe;
+  }, [navigation]);
 
   const renderProduction = ({ item }) => (
     <TouchableOpacity

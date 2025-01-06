@@ -17,7 +17,7 @@ const Home = ({ navigation }) => {
         style={styles.menuButton}
         onPress={() => navigation.navigate("ScanQRCode")}
       >
-        <Text style={styles.menuButtonText}>Pase de lista (QR)</Text>
+        <Text style={styles.menuButtonText}>Pase de lista</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.menuButton}

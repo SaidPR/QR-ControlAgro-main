@@ -8,14 +8,14 @@ import {
   Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { FIRESTORE_DB } from "../firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
 
 const AddProductionRecord = ({ navigation, route }) => {
   const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState("");
-  const [boxes, setBoxes] = useState("");
-  const [buckets, setBuckets] = useState("");
+  const [selectedUser, setSelectedUser] = useState(route.params?.record?.name || "");
+  const [boxes, setBoxes] = useState(route.params?.record?.boxes?.toString() || "");
+  const [buckets, setBuckets] = useState(route.params?.record?.buckets?.toString() || "");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -34,41 +34,48 @@ const AddProductionRecord = ({ navigation, route }) => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    console.log(route.params);  // Esto debería mostrar el parámetro onSave
-  }, [route.params]);
-  
-
-  const handleSaveRecord = () => {
+  const handleSaveRecord = async () => {
     if (!selectedUser || !boxes || !buckets) {
       Alert.alert("Error", "Todos los campos son obligatorios.");
       return;
     }
 
-    const date = new Date().toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-    const newRecord = {
+    const record = {
       name: selectedUser,
-      date,
+      date: route.params?.record?.date || new Date().toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
       boxes: parseInt(boxes, 10),
       buckets: parseInt(buckets, 10),
     };
 
-    if (route.params?.onSave) {
-      route.params.onSave(newRecord);
+    if (route.params?.record) {
+      // Editar registro existente
+      try {
+        const recordRef = doc(FIRESTORE_DB, "productions", route.params.record.id);
+        await updateDoc(recordRef, record);
+        Alert.alert("Éxito", "El registro fue actualizado.");
+        navigation.navigate("ProductionControl");
+      } catch (error) {
+        console.error("Error al actualizar el registro:", error);
+        Alert.alert("Error", "No se pudo actualizar el registro.");
+      }
+    } else if (route.params?.onSave) {
+      // Crear un nuevo registro
+      route.params.onSave(record);
+      navigation.goBack();
     } else {
       Alert.alert("Error", "No se pudo guardar el registro.");
     }
-    navigation.goBack();
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Añadir Registro de Producción</Text>
+      <Text style={styles.title}>
+        {route.params?.record ? "Editar Registro de Producción" : "Añadir Registro de Producción"}
+      </Text>
 
       <Text style={styles.label}>Selecciona un usuario:</Text>
       <View style={styles.pickerContainer}>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   FlatList,
@@ -11,14 +11,34 @@ import {
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-
-const workers = [
-  { id: "1", name: "Morgan James", phone: "1234567890", location: "Zamora Mich.", profilePhoto: null },
-  { id: "2", name: "John Doe", phone: "9876543210", location: "Uruapan Mich.", profilePhoto: null },
-  { id: "3", name: "J mole", phone: "5554443333", location: "Morelia Mich.", profilePhoto: null },
-];
+import { FIRESTORE_DB } from "../firebaseConfig"; 
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const WorkersList = ({ navigation }) => {
+  const [workerList, setWorkerList] = useState([]); // Estado para la lista de trabajadores
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      try {
+        const workersRef = collection(FIRESTORE_DB, "users"); // Suponiendo que los usuarios están en la colección "users"
+        const q = query(workersRef, where("role", "==", "TRABAJADOR"));
+        const querySnapshot = await getDocs(q);
+        const workers = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setWorkerList(workers);
+      } catch (error) {
+        Alert.alert("Error", "No se pudieron cargar los trabajadores");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkers();
+  }, []);
+
   const handleCameraAlert = async (worker) => {
     const options = [
       { text: "Cámara", onPress: () => openCamera(worker) },
@@ -40,7 +60,8 @@ const WorkersList = ({ navigation }) => {
       quality: 0.7,
     });
     if (!result.canceled) {
-      worker.profilePhoto = result.assets[0].uri;
+      const updatedWorker = { ...worker, profilePhoto: result.assets[0].uri };
+      updateWorkerInList(updatedWorker);
     }
   };
 
@@ -56,8 +77,17 @@ const WorkersList = ({ navigation }) => {
       quality: 0.7,
     });
     if (!result.canceled) {
-      worker.profilePhoto = result.assets[0].uri;
+      const updatedWorker = { ...worker, profilePhoto: result.assets[0].uri };
+      updateWorkerInList(updatedWorker);
     }
+  };
+
+  const updateWorkerInList = (updatedWorker) => {
+    setWorkerList((prevList) =>
+      prevList.map((worker) =>
+        worker.id === updatedWorker.id ? updatedWorker : worker
+      )
+    );
   };
 
   const handleCall = (phone) => {
@@ -119,10 +149,26 @@ const WorkersList = ({ navigation }) => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Cargando trabajadores...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
+      {/* Botón de Registrar Trabajador */}
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={() => navigation.navigate("AddWorker")}
+      >
+        <Text style={styles.registerButtonText}>+ Registrar Trabajador</Text>
+      </TouchableOpacity>
+
       <FlatList
-        data={workers}
+        data={workerList}
         keyExtractor={(item) => item.id}
         renderItem={renderWorkerCard}
         contentContainerStyle={styles.list}
@@ -134,6 +180,18 @@ const WorkersList = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f4f4f4", padding: 10 },
   list: { paddingBottom: 20 },
+  registerButton: {
+    backgroundColor: "#4caf50",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  registerButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
   card: {
     backgroundColor: "#fff",
     borderRadius: 10,

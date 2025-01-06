@@ -1,23 +1,45 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { FIRESTORE_DB } from "../firebaseConfig";
 
 const ProductionDetails = ({ route, navigation }) => {
   const { record } = route.params;
 
   const handleEdit = () => {
-    Alert.alert("Editar", "Función no implementada.");
+    navigation.navigate("AddProductionRecord", {
+      record,
+      onSave: async (updatedRecord) => {
+        try {
+          const recordRef = doc(FIRESTORE_DB, "productions", record.id);
+          await updateDoc(recordRef, updatedRecord);
+          Alert.alert("Éxito", "El registro fue actualizado.");
+          navigation.goBack(); 
+        } catch (error) {
+          console.error("Error al actualizar el registro:", error);
+          Alert.alert("Error", "No se pudo actualizar el registro.");
+        }
+      },
+    });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     Alert.alert("Eliminar", "¿Estás seguro de eliminar este registro?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", onPress: () => navigation.goBack() },
+      {
+        text: "Eliminar",
+        onPress: async () => {
+          try {
+            const recordRef = doc(FIRESTORE_DB, "productions", record.id);
+            await deleteDoc(recordRef);
+            Alert.alert("Éxito", "El registro fue eliminado.");
+            navigation.goBack(); // Volver a la lista
+          } catch (error) {
+            console.error("Error al eliminar el registro:", error);
+            Alert.alert("Error", "No se pudo eliminar el registro.");
+          }
+        },
+      },
     ]);
   };
 
@@ -42,7 +64,6 @@ const ProductionDetails = ({ route, navigation }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

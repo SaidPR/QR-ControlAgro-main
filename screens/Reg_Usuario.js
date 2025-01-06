@@ -57,26 +57,28 @@ const RegistroUsuario = ({ navigation }) => {
       const user = userCredential.user;
       console.log("Usuario registrado:", user.email);
   
-      // Construye los datos organizados
+      // Construye los datos organizados, agregando el rol "TRABAJADOR"
       const userData = {
         name: `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`.trim(),
         phone: telefono,
         email,
         fechaNacimiento: formData.fechaNacimiento,
         curp: formData.curp,
+        role: "TRABAJADOR", // Asegurando que el rol se guarda correctamente
       };
   
-      // Guarda el usuario en Firestore
+      // Guarda el usuario en Firestore en la colección "users"
       const usersCollectionRef = collection(FIRESTORE_DB, "users");
       await addDoc(usersCollectionRef, userData);
   
-      console.log("Usuario guardado en Firestore");
+      console.log("Usuario guardado en Firestore con rol TRABAJADOR");
       navigation.navigate("Reg_Docs");
     } catch (error) {
       console.error("Error de registro:", error);
       setError(error.message);
     }
   };
+  
   
 
   return (
