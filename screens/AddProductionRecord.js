@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { FIRESTORE_DB } from "../firebaseConfig";
 
 const AddProductionRecord = ({ navigation, route }) => {
@@ -18,20 +18,50 @@ const AddProductionRecord = ({ navigation, route }) => {
   const [buckets, setBuckets] = useState(route.params?.record?.buckets?.toString() || "");
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchConfirmedUsers = async () => {
       try {
-        const snapshot = await getDocs(collection(FIRESTORE_DB, "users"));
-        const userList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setUsers(userList);
+        console.log("Fetching confirmed attendance...");
+        
+        // Obtener datos de la colección 'attendance'
+        const attendanceSnapshot = await getDocs(collection(FIRESTORE_DB, "attendance"));
+        const confirmedAttendance = attendanceSnapshot.docs
+          .filter((doc) => doc.data().status === "Confirmada")
+          .map((doc) => ({
+            userId: doc.data().workerId,
+          }));
+
+        console.log("Confirmed attendance:", confirmedAttendance);
+
+        if (confirmedAttendance.length === 0) {
+          console.warn("No se encontraron registros de asistencia confirmados.");
+          return;
+        }
+
+        const confirmedUserIds = new Set(confirmedAttendance.map((att) => att.userId));
+
+        // Obtener datos de la colección 'users'
+        const usersSnapshot = await getDocs(collection(FIRESTORE_DB, "users"));
+        const filteredUsers = usersSnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter((user) => confirmedUserIds.has(user.id));
+
+        console.log("Filtered users:", filteredUsers);
+
+        if (filteredUsers.length === 0) {
+          console.warn("No se encontraron usuarios con asistencia confirmada.");
+        }
+
+        setUsers(filteredUsers);
       } catch (error) {
         console.error("Error al obtener usuarios:", error);
         Alert.alert("Error", "No se pudieron cargar los usuarios.");
       }
     };
-    fetchUsers();
+
+    fetchConfirmedUsers();
   }, []);
 
   const handleSaveRecord = async () => {
@@ -51,22 +81,18 @@ const AddProductionRecord = ({ navigation, route }) => {
       buckets: parseInt(buckets, 10),
     };
 
-    if (route.params?.record) {
-      // Editar registro existente
-      try {
-        const recordRef = doc(FIRESTORE_DB, "productions", route.params.record.id);
-        await updateDoc(recordRef, record);
-        Alert.alert("Éxito", "El registro fue actualizado.");
-        navigation.navigate("ProductionControl");
-      } catch (error) {
-        console.error("Error al actualizar el registro:", error);
-        Alert.alert("Error", "No se pudo actualizar el registro.");
+    try {
+      if (route.params?.record) {
+        // Lógica para actualizar registro existente
+        console.log("Actualizando registro:", record);
+      } else if (route.params?.onSave) {
+        // Lógica para guardar nuevo registro
+        console.log("Guardando nuevo registro:", record);
+        route.params.onSave(record);
+        navigation.goBack();
       }
-    } else if (route.params?.onSave) {
-      // Crear un nuevo registro
-      route.params.onSave(record);
-      navigation.goBack();
-    } else {
+    } catch (error) {
+      console.error("Error al guardar el registro:", error);
       Alert.alert("Error", "No se pudo guardar el registro.");
     }
   };
@@ -119,6 +145,7 @@ const AddProductionRecord = ({ navigation, route }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

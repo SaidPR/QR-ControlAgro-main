@@ -10,6 +10,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore";
@@ -30,56 +31,53 @@ const RegistroUsuario = ({ navigation }) => {
   });
 
   const [error, setError] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Función para manejar los cambios en los campos del formulario
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  // Función para validar el correo electrónico
-  const isValidEmail = (email) => {
-    const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return re.test(email);
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false); // Ocultar el selector después de seleccionar
+    if (selectedDate) {
+      const formattedDate = selectedDate.toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      handleInputChange("fechaNacimiento", formattedDate);
+    }
   };
 
   const handleRegistro = async () => {
-    const { email, password, primerNombre, segundoNombre, primerApellido, segundoApellido, telefono } = formData;
-  
-    // Validar el formato del correo
-    if (!isValidEmail(email)) {
-      setError("Por favor ingrese un correo electrónico válido.");
+    const { email, password, primerNombre, primerApellido, segundoApellido, telefono, fechaNacimiento, curp } = formData;
+
+  if (!email || !password || !primerNombre || !primerApellido || !segundoApellido|| !telefono || !fechaNacimiento || !curp) {
+      setError("Por favor completa todos los campos.");
       return;
     }
-  
+
     try {
-      // Crea un nuevo usuario en Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
       const user = userCredential.user;
-      console.log("Usuario registrado:", user.email);
-  
-      // Construye los datos organizados, agregando el rol "TRABAJADOR"
+
       const userData = {
-        name: `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`.trim(),
-        phone: telefono,
+        name: `${formData.primerNombre} ${formData.segundoNombre} ${formData.primerApellido} ${formData.segundoApellido}`.trim(),
+        phone: formData.telefono,
         email,
-        fechaNacimiento: formData.fechaNacimiento,
+        fechaNacimiento,
         curp: formData.curp,
-        role: "TRABAJADOR", // Asegurando que el rol se guarda correctamente
+        role: "ADMIN",
       };
-  
-      // Guarda el usuario en Firestore en la colección "users"
+
       const usersCollectionRef = collection(FIRESTORE_DB, "users");
       await addDoc(usersCollectionRef, userData);
-  
-      console.log("Usuario guardado en Firestore con rol TRABAJADOR");
-      navigation.navigate("Reg_Docs");
+
+      navigation.navigate("Home");
     } catch (error) {
-      console.error("Error de registro:", error);
-      setError(error.message);
+      setError("Error al registrar: " + error.message);
     }
   };
-  
-  
 
   return (
     <KeyboardAvoidingView
@@ -88,11 +86,8 @@ const RegistroUsuario = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Registro de Usuario</Text>
-
-        {/* Mostrar el mensaje de error si existe */}
         {error && <Text style={styles.errorText}>{error}</Text>}
 
-        {/* Campos del formulario */}
         <TextInput
           placeholder="Primer nombre"
           value={formData.primerNombre}
@@ -139,19 +134,32 @@ const RegistroUsuario = ({ navigation }) => {
           style={styles.input}
         />
         <TextInput
-          placeholder="Fecha de Nacimiento"
-          value={formData.fechaNacimiento}
-          onChangeText={(value) => handleInputChange("fechaNacimiento", value)}
-          style={styles.input}
-        />
-        <TextInput
           placeholder="CURP"
           value={formData.curp}
-          onChangeText={(value) => handleInputChange("curp", value)}
+          onChangeText={(value) => handleInputChange("CURP", value)}
+          secureTextEntry
           style={styles.input}
         />
 
-        {/* Botón para registrar usuario */}
+        {/* Fecha de Nacimiento */}
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formData.fechaNacimiento || "Seleccionar Fecha de Nacimiento"}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={new Date()}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
+
         <TouchableOpacity style={styles.button} onPress={handleRegistro}>
           <Text style={styles.buttonText}>Registrar</Text>
         </TouchableOpacity>
@@ -187,6 +195,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#fff",
     marginBottom: height * 0.02,
+  },
+  dateButton: {
+    width: "100%",
+    paddingVertical: height * 0.02,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    marginBottom: height * 0.02,
+  },
+  dateButtonText: {
+    color: "#333",
+    fontSize: width * 0.045,
   },
   button: {
     width: "100%",

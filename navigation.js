@@ -20,7 +20,7 @@ import GenerateQR from "./screens/GenerateQR.js";
 import EditUser from "./screens/EditUser.js"
 import AddProductionRecord from "./screens/AddProductionRecord.js"
 import AddWorker from "./screens/AddWorker.js"
-//import ScanQRCode from "./screens/ScanQRCode.js";
+import Lista from "./screens/Lista.js";
 
 const Stack = createStackNavigator();
 
@@ -133,6 +133,11 @@ const StackNavigator = () => {
                 name="AddWorker"
                 component={AddWorker}
                 options={{ title: "Registrar trabajador" }}
+            />
+            <Stack.Screen
+                name="Lista"
+                component={Lista}
+                options={{ title: "Pase de Lista" }}
             />
         </Stack.Navigator>
     );

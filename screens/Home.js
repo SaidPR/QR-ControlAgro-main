@@ -15,9 +15,9 @@ const Home = ({ navigation }) => {
       <Text style={styles.title}>Menú</Text>
       <TouchableOpacity
         style={styles.menuButton}
-        onPress={() => navigation.navigate("ScanQRCode")}
+        onPress={() => navigation.navigate("Lista")}
       >
-        <Text style={styles.menuButtonText}>Pase de lista</Text>
+        <Text style={styles.menuText}>Pase de lista</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.menuButton}

@@ -10,6 +10,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore";
@@ -32,6 +33,19 @@ const AddWorker = ({ navigation }) => {
   });
 
   const [error, setError] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false); // Ocultar el selector después de seleccionar
+    if (selectedDate) {
+      const formattedDate = selectedDate.toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      handleInputChange("fechaNacimiento", formattedDate);
+    }
+  };
 
   // Función para manejar los cambios en los campos del formulario
   const handleInputChange = (field, value) => {
@@ -64,14 +78,13 @@ const AddWorker = ({ navigation }) => {
         name: `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`.trim(),
         phone: telefono,
         email,
-        fechaNacimiento: formData.fechaNacimiento,
+        fechaNacimiento,
         curp: formData.curp,
         location: location,
         description: description,
-        role: "TRABAJADOR", // Asegurando que el rol se guarda correctamente
+        role: "TRABAJADOR", 
       };
 
-      // Guarda el trabajador en Firestore en la colección "users"
       const usersCollectionRef = collection(FIRESTORE_DB, "users");
       await addDoc(usersCollectionRef, workerData);
 
@@ -140,12 +153,25 @@ const AddWorker = ({ navigation }) => {
           secureTextEntry
           style={styles.input}
         />
-        <TextInput
-          placeholder="Fecha de Nacimiento"
-          value={formData.fechaNacimiento}
-          onChangeText={(value) => handleInputChange("fechaNacimiento", value)}
-          style={styles.input}
-        />
+        
+        {/* Fecha de Nacimiento */}
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formData.fechaNacimiento || "Seleccionar Fecha de Nacimiento"}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={new Date()}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
         <TextInput
           placeholder="CURP"
           value={formData.curp}
@@ -215,6 +241,20 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
     fontWeight: "bold",
   },
+  dateButtonText: {
+    color: "#333",
+    fontSize: width * 0.045,
+  },
+  dateButton: {
+    width: "100%",
+    paddingVertical: height * 0.02,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    marginBottom: height * 0.02,
+  }
 });
 
 export default AddWorker;

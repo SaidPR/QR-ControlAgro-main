@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet, Button, Alert } from "react-native";
 import { doc, updateDoc } from "firebase/firestore";
-import { FIRESTORE_DB } from "../firebaseConfig"; // Asegúrate de usar tu configuración de Firebase
+import { FIRESTORE_DB } from "../firebaseConfig"; 
 
 const EditUser = ({ route, navigation }) => {
-  const user = route.params?.user; // Recibimos los datos del usuario a editar
+  const user = route.params?.user; 
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(user?.phone || "");
 
   const handleUpdateUser = async () => {
-    if (!name || !email) {
+    if (!name || !email || !phone) {
       Alert.alert("Error", "Todos los campos son obligatorios.");
       return;
     }
@@ -20,10 +21,11 @@ const EditUser = ({ route, navigation }) => {
       await updateDoc(userRef, {
         name,
         email,
+        phone,
       });
 
       Alert.alert("Éxito", "Usuario actualizado correctamente.");
-      navigation.goBack(); // Vuelve a la pantalla anterior
+      navigation.goBack(); 
     } catch (error) {
       console.error("Error al actualizar el usuario:", error);
       Alert.alert("Error", "No se pudo actualizar el usuario.");
@@ -49,6 +51,14 @@ const EditUser = ({ route, navigation }) => {
         onChangeText={setEmail}
         placeholder="Correo del usuario"
         keyboardType="email-address"
+      />
+
+      <Text style={styles.label}>Número de teléfono:</Text>
+      <TextInput
+        style={styles.input}
+        value={phone}
+        onChangeText={setPhone}
+        placeholder="Teléfono del usuario"
       />
 
       <View style={styles.buttonContainer}>
