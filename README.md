@@ -100,7 +100,7 @@ QR-ControlAgro/
 1. Clonar el repositorio:
 
 ```bash
-git clone https://github.com/tu_usuario/QR-ControlAgro.git
+git clone https://github.com/SaidPR/QR-ControlAgro-main 
 ```
 
 2. Navegar al directorio del proyecto:
