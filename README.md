@@ -125,9 +125,9 @@ expo start
 
 ## Funcionalidades Pendientes
 
-- Integración con Firebase para manejo de autenticación y base de datos.
-- Implementación del módulo de producción.
+- La Gestión de Trabajadores implementación del QR Funcional actualizado, (de momento sólo muestra un listado rápido supliendo las funciones del QR) impedida de momento debido a la incompatibilidad de versiones en expo y react-native.
 - Generación de reportes avanzados.
+- CRUD´S mejorados en los módulos de Administración de usuarios (más tipos de roles).
 
 ---
 
