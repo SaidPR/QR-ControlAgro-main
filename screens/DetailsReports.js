@@ -1,91 +1,121 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-
-const { width, height } = Dimensions.get("window");
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { doc, deleteDoc } from "firebase/firestore";
+import { FIRESTORE_DB } from "../firebaseConfig";
 
 const DetailsReports = ({ route, navigation }) => {
   const { report } = route.params;
 
+  const formatDate = (date) => {
+    const formattedDate = new Date(date);
+    if (isNaN(formattedDate.getTime())) {
+      return ""; 
+    }
+    return formattedDate.toLocaleString();
+  };
+
+  const handleDeleteReport = async () => {
+    Alert.alert(
+      "Eliminar Reporte",
+      "¿Estás seguro de que deseas eliminar este reporte?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: deleteReport },
+      ]
+    );
+  };
+
+  const deleteReport = async () => {
+    try {
+      const reportRef = doc(FIRESTORE_DB, "reports", report.id);  
+      await deleteDoc(reportRef);
+      Alert.alert("Éxito", "El reporte ha sido eliminado.");
+      navigation.goBack(); 
+    } catch (error) {
+      console.error("Error al eliminar el reporte:", error);
+      Alert.alert("Error", "No se pudo eliminar el reporte.");
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Detalles del Reporte</Text>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.detailTitle}>Título:</Text>
-        <Text style={styles.detailContent}>{report.title}</Text>
-        <Text style={styles.detailTitle}>Fecha:</Text>
-        <Text style={styles.detailContent}>{report.date}</Text>
-        <Text style={styles.detailTitle}>Descripción:</Text>
-        <Text style={styles.detailContent}>{report.description}</Text>
-      </View>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.buttonText}>Editar Reporte</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => {
-            alert("Reporte eliminado correctamente");
-            navigation.goBack();
-          }}
-        >
-          <Text style={styles.buttonText}>Eliminar Reporte</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>{report.title}</Text>
+      {/* Validar y mostrar la fecha */}
+      <Text style={styles.date}>{formatDate(report.date)}</Text>
+      <Text style={styles.description}>{report.description}</Text>
+
+      {/* Mostrar las asistencias */}
+      <Text style={styles.subTitle}>Asistencias:</Text>
+      {report.attendance && report.attendance.length > 0 ? (
+        report.attendance.map((attendance, index) => (
+          <View key={index} style={styles.attendanceItem}>
+            <Text style={styles.attendanceText}>
+              {formatDate(attendance.date)} - {attendance.status}
+            </Text>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.noAttendance}>No hay registros de asistencia.</Text>
+      )}
+
+      {/* Botón para eliminar el reporte */}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={handleDeleteReport}
+      >
+        <Text style={styles.deleteButtonText}>Eliminar Reporte</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
     padding: 20,
+    backgroundColor: "#fff",
   },
-  header: {
+  title: {
     fontSize: 24,
     fontWeight: "bold",
+  },
+  date: {
+    fontSize: 18,
+    color: "#7f8c8d",
+    marginBottom: 10,
+  },
+  description: {
+    fontSize: 16,
+    color: "#34495e",
     marginBottom: 20,
-    textAlign: "center",
-    color: "#2c3e50",
   },
-  detailsContainer: {
-    marginBottom: 30,
-  },
-  detailTitle: {
+  subTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#34495e",
-    marginBottom: 5,
+    marginBottom: 10,
   },
-  detailContent: {
+  attendanceItem: {
+    marginBottom: 10,
+  },
+  attendanceText: {
     fontSize: 16,
-    color: "#7f8c8d",
-    marginBottom: 15,
+    color: "#2980b9",
   },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  editButton: {
-    backgroundColor: "#2980b9",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-    width: "45%",
-    alignItems: "center",
+  noAttendance: {
+    fontSize: 16,
+    color: "#e74c3c",
   },
   deleteButton: {
+    marginTop: 20,
+    paddingVertical: 15,
     backgroundColor: "#e74c3c",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-    width: "45%",
+    borderRadius: 10,
     alignItems: "center",
   },
-  buttonText: {
+  deleteButtonText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

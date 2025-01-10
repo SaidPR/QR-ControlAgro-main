@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,17 +6,35 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Alert,
 } from "react-native";
+import { collection, getDocs } from "firebase/firestore";
+import { FIRESTORE_DB } from "../firebaseConfig";
 
 const { width, height } = Dimensions.get("window");
 
-const reports = [
-  { id: "1", title: "Reporte 1", date: "18 Nov 2024", description: "Resumen del reporte 1" },
-  { id: "2", title: "Reporte 2", date: "17 Nov 2024", description: "Resumen del reporte 2" },
-  { id: "3", title: "Reporte 3", date: "16 Nov 2024", description: "Resumen del reporte 3" },
-];
-
 const Reports = ({ navigation }) => {
+  const [reports, setReports] = useState([]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const reportsCollection = collection(FIRESTORE_DB, "reports");
+        const snapshot = await getDocs(reportsCollection);
+        const reportsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setReports(reportsData);
+      } catch (error) {
+        console.error("Error al cargar los reportes:", error);
+        Alert.alert("Error", "No se pudieron cargar los reportes.");
+      }
+    };
+
+    fetchReports();
+  }, []);
+
   const renderReportCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}

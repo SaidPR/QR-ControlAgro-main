@@ -8,7 +8,8 @@ import {
   Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { FIRESTORE_DB } from "../firebaseConfig";
 
 const WorkerDetails = ({ route, navigation }) => {
   const [profilePhoto, setProfilePhoto] = useState(
@@ -33,46 +34,41 @@ const WorkerDetails = ({ route, navigation }) => {
     );
   }
 
-  const handleCamera = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permiso requerido", "Se requiere acceso a la cámara.");
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      setProfilePhoto(result.assets[0].uri);
-      Alert.alert("Éxito", "La imagen ha sido actualizada.");
-    }
-  };
+  const handleGenerateReport = async () => {
+    try {
+      const attendanceCollection = collection(FIRESTORE_DB, "attendance");
+      const q = query(
+        attendanceCollection,
+        where("workerId", "==", worker.id) 
+      );
+      const snapshot = await getDocs(q);
 
-  const handleGallery = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permiso requerido", "Se requiere acceso a la galería.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      setProfilePhoto(result.assets[0].uri);
-      Alert.alert("Éxito", "La imagen ha sido actualizada.");
-    }
-  };
+      const attendanceData = snapshot.docs.map((doc) => doc.data());
 
-  const handleCameraAlert = () => {
-    Alert.alert("Imagen de Perfil", "Selecciona una opción", [
-      { text: "Cámara", onPress: handleCamera },
-      { text: "Galería", onPress: handleGallery },
-      { text: "Cancelar", style: "cancel" },
-    ]);
+      if (attendanceData.length === 0) {
+        Alert.alert("Sin Asistencias", "No se encontraron registros de asistencia.");
+        return;
+      }
+
+      const reportData = {
+        title: `Reporte de Asistencia de ${worker.name}`,
+        date: new Date().toLocaleDateString(),
+        description: `Reporte generado para el trabajador ${worker.name}`,
+        workerId: worker.id,
+        createdAt: new Date(),
+        attendance: attendanceData, 
+      };
+
+      const reportsCollection = collection(FIRESTORE_DB, "reports");
+      await addDoc(reportsCollection, reportData);
+
+      Alert.alert("Reporte Generado", "El reporte ha sido guardado con éxito.");
+      
+      navigation.navigate("Reports");
+    } catch (error) {
+      console.error("Error al generar el reporte:", error);
+      Alert.alert("Error", "No se pudo generar el reporte.");
+    }
   };
 
   return (
@@ -87,15 +83,21 @@ const WorkerDetails = ({ route, navigation }) => {
           }
           style={styles.profileImage}
         />
-        <TouchableOpacity style={styles.cameraIcon} onPress={handleCameraAlert}>
+        <TouchableOpacity style={styles.cameraIcon}>
           <FontAwesome name="camera" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
       <Text style={styles.title}>{worker.name}</Text>
       <Text style={styles.detail}>📞 {worker.phone}</Text>
       <Text style={styles.detail}>📍 {worker.location}</Text>
-      <Text style={styles.description}>{worker.description}
-      </Text>
+
+      {/* Botón para generar reporte */}
+      <TouchableOpacity
+        style={styles.reportButton}
+        onPress={handleGenerateReport}
+      >
+        <Text style={styles.reportButtonText}>Generar Reporte de Asistencia</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -162,6 +164,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#555",
     marginTop: 10,
+    textAlign: "center",
+  },
+  reportButton: {
+    marginTop: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    backgroundColor: "#007bff",
+    borderRadius: 10,
+  },
+  reportButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
     textAlign: "center",
   },
 });
