@@ -59,7 +59,7 @@ const AddWorker = ({ navigation }) => {
   };
 
   const handleRegistro = async () => {
-    const { email, password, primerNombre, segundoNombre, primerApellido, segundoApellido, telefono, location, description } = formData;
+    const { email, password, primerNombre, segundoNombre, primerApellido, segundoApellido, telefono, location, description, fechaNacimiento } = formData;
 
     // Validar el formato del correo
     if (!isValidEmail(email)) {
